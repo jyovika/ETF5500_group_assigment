@@ -4,4 +4,8 @@ format: html
 author: Girika, Jyovika Aswale, Richa Anghan, Sia Chawla, Siddhi Ajit Jadhav
 ---
 
+```{r}
+market_df <- read.csv(here::here("data/Market.csv"))
+sample_df <- read.csv(here::here("data/SampleK.csv"))
+```
 
