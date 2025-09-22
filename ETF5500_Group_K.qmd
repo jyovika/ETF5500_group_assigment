@@ -1,11 +1,40 @@
 ---
 title: "ETF5500 Group Assignment"
-format: html
+format: pdf
 author: Girika, Jyovika Aswale, Richa Anghan, Sia Chawla, Siddhi Ajit Jadhav
 ---
+
+```{r, message=FALSE}
+library(tidyverse)
+library(zoo)
+```
+
 
 ```{r}
 market_df <- read.csv(here::here("data/Market.csv"))
 sample_df <- read.csv(here::here("data/SampleK.csv"))
 ```
 
+```{r, IDA results='hide', echo=FALSE}
+colSums(is.na(sample_df))
+
+range(sample_df$Date)
+
+tibble(stock = names(sample_df)[-1]) %>%
+  mutate(industry = substr(stock,1,1)) %>%
+  count(industry)
+```
+
+## Cleaning 
+```{r}
+sample_df <- sample_df %>%
+  rename(Date = 1) %>%
+  mutate(Date = as.yearmon(str_remove(Date, "Y"), format = "%Y M%m"))
+```
+
+
+
+
+## References
+
+Date formating using zoo in R. (2017, January). [Online post]. <https://stackoverflow.com/questions/41588737/date-formating-using-zoo-in-r?rq=3>
