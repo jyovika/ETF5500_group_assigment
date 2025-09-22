@@ -26,12 +26,72 @@ tibble(stock = names(sample_df)[-1]) %>%
 ```
 
 ## Cleaning 
-```{r}
+```{r, CLeaning}
 sample_df <- sample_df %>%
-  rename(Date = 1) %>%
   mutate(Date = as.yearmon(str_remove(Date, "Y"), format = "%Y M%m"))
+
+market_df <- market_df %>%
+  mutate(Date = as.yearmon(str_remove(Date, "Y"), format = "%Y M%m"))
+  
 ```
 
+## EDA
+
+```{r, EDA }
+stocks_long <- sample_df %>%
+  pivot_longer(-Date, names_to = "stock", values_to = "ret") %>%
+  mutate(industry = substr(stock,1,1),
+         industry_name = recode(industry,
+           B = "Mining",
+           C = "Construction",
+           D = "Manufacturing",
+           E = "Transport & Utilities",
+           F = "Wholesale Trade",
+           G = "Retail Trade",
+           H = "Finance/Insurance/RE",
+           I = "Services"
+         ))
+
+industry_summary <- stocks_long %>%
+  group_by(industry_name) %>%
+  summarise(
+    mean_return = mean(ret, na.rm = TRUE),
+    sd_return   = sd(ret, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(industry_summary, aes(x = reorder(industry_name, mean_return),
+                             y = mean_return, fill = industry_name)) +
+  geom_col() +
+  coord_flip() +  
+  labs(title = "Average Monthly Return by Industry",
+       x = "Industry", y = "Mean Return") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+sampleXmarket <- stocks_long %>%
+  left_join(market_df, by = "Date")
+
+industry_ts <- sampleXmarket %>%
+  group_by(Date, industry_name) %>%
+  summarise(
+    avg_ret = mean(ret, na.rm = TRUE),
+    MarketReturn = first(MarketReturn),  
+    .groups = "drop"
+  )
+
+ggplot(industry_ts, aes(x = MarketReturn, y = avg_ret, color = industry_name)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth() +
+  facet_wrap(~ industry_name, scales = "free_y") +
+  labs(
+    title = "Industry Average Returns vs Market Return",
+    x = "Market Return",
+    y = "Industry Avg Return"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
 
 
 
