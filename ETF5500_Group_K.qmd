@@ -7,6 +7,7 @@ author: Girika, Jyovika Aswale, Richa Anghan, Sia Chawla, Siddhi Ajit Jadhav
 ```{r, message=FALSE}
 library(tidyverse)
 library(zoo)
+library(broom)
 ```
 
 
@@ -144,7 +145,7 @@ industry_factor <- loadings_df %>%
     mean_F1 = mean(Factor1, na.rm = TRUE),
     mean_F2 = mean(Factor2, na.rm = TRUE))
 
-
+tidy_fact_out <- tidy(fact_out)
 ```
 **then we show with 3 factors**
 ```{r}
