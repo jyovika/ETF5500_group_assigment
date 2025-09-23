@@ -130,6 +130,11 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
 
 ```
 
+## Notes 
+
+The first principal component (PC1) explains the largest proportion of variance in the stock return dataset (~27%). When we compare PC1 to the market return (S&P500), we observe a very strong linear relationship, with a high absolute correlation. Although the relationship is negative, this is a result of PCA’s arbitrary sign convention — flipping the direction of PC1 would make the correlation positive. Thus, PC1 can be interpreted as capturing the broad market factor, consistent with the belief that the largest principal component coincides with market movements.
+
+
 ## References
 
 Date formating using zoo in R. (2017, January). [Online post]. <https://stackoverflow.com/questions/41588737/date-formating-using-zoo-in-r?rq=3>
