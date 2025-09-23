@@ -128,6 +128,7 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
 
 ```
 
+
 ## Question 2
 
 ```{r}
@@ -146,6 +147,10 @@ industry_factor <- loadings_df %>%
 
 
 ```
+
+
+
+
 
 
 ## References
