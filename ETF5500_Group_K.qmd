@@ -130,7 +130,7 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
 
 
 ## Question 2
-
+**so we do this first**
 ```{r}
 fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax") 
 
@@ -142,12 +142,25 @@ industry_factor <- loadings_df %>%
   group_by(industry) %>%
   summarise(
     mean_F1 = mean(Factor1, na.rm = TRUE),
-    mean_F2 = mean(Factor2, na.rm = TRUE)
-  )
+    mean_F2 = mean(Factor2, na.rm = TRUE))
 
 
 ```
+**then we show with 3 factors**
+```{r}
+fact_out_2 <- factanal(sample_df[,-1], factors = 3, rotation = "varimax") 
 
+loadings_df2 <- as.data.frame(unclass(fact_out_2$loadings))
+loadings_df2$stock <- rownames(loadings_df2)
+loadings_df2$industry <- substr(loadings_df2$stock, 1, 1)
+
+industry_factor2 <- loadings_df2 %>%
+  group_by(industry) %>%
+  summarise(
+    mean_F1 = mean(Factor1, na.rm = TRUE),
+    mean_F2 = mean(Factor2, na.rm = TRUE),
+    mean_F3 = mean(Factor3, na.rm = TRUE))
+```
 
 
 
