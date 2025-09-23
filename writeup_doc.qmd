@@ -1,0 +1,6 @@
+---
+title: "writeup_doc"
+format: pdf
+editor: visual
+---
+
