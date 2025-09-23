@@ -15,7 +15,7 @@ market_df <- read.csv(here::here("data/Market.csv"))
 sample_df <- read.csv(here::here("data/SampleK.csv"))
 ```
 
-```{r, IDA results='hide', echo=FALSE}
+```{r, IDA_results='hide', echo=FALSE}
 colSums(is.na(sample_df))
 
 range(sample_df$Date)
@@ -100,7 +100,6 @@ pca_out <- prcomp(sample_df[,-1], scale. = TRUE)
 plot(pca_out, type = "line")
 
 summary(pca_out)
-biplot(pca_out, scale = 0, main = "Distance biplot")
 ```
 ## Question 1
 ```{r}
@@ -109,8 +108,7 @@ pc1_scores <- pc_scores$PC1
 
 pca_vs_market <- tibble(
   Date = sample_df$Date,  
-  PC1 = pc1_scores
-) %>%
+  PC1 = pc1_scores) %>%
   left_join(market_df, by = "Date")
 
 cor(pca_vs_market$PC1, pca_vs_market$MarketReturn, use = "pairwise.complete.obs")
@@ -129,6 +127,26 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
 
 
 ```
+
+## Question 2
+
+```{r}
+fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax") 
+
+loadings_df <- as.data.frame(unclass(fact_out$loadings))
+loadings_df$stock <- rownames(loadings_df)
+loadings_df$industry <- substr(loadings_df$stock, 1, 1)
+
+industry_factor <- loadings_df %>%
+  group_by(industry) %>%
+  summarise(
+    mean_F1 = mean(Factor1, na.rm = TRUE),
+    mean_F2 = mean(Factor2, na.rm = TRUE)
+  )
+
+
+```
+
 
 ## References
 
