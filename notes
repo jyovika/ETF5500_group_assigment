@@ -1,3 +1,7 @@
 - we need 2 PCAs based on the scree plot
 
 PC is the biggest PC based on the proportion of variance
+
+Q1 - The first principal component (PC1) explains the largest proportion of variance in the stock return dataset (~27%). When we compare PC1 to the market return (S&P500), we observe a very strong linear relationship, with a high absolute correlation. Although the relationship is negative, this is a result of PCA’s arbitrary sign convention — flipping the direction of PC1 would make the correlation positive. Thus, PC1 can be interpreted as capturing the broad market factor, consistent with the belief that the largest principal component coincides with market movements.
+
+Q2 - The first latent factor shows the greatest loading for Construction and Finance/Insurance/RE, confirming that these industries are most exposed to broad systematic market movements. When shifting to the second factor, however, the pattern changes: Finance/Insurance/RE remains significant, but Mining and Wholesale Trade also exhibit stronger loadings. This suggests that Factor 1 represents market-wide risk, while Factor 2 reflects more sector-specific drivers such as financial or commodity-linked shocks.
