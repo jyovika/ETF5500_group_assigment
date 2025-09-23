@@ -145,10 +145,55 @@ industry_factor <- loadings_df %>%
     mean_F2 = mean(Factor2, na.rm = TRUE)
   )
 
+library(broom)
+
+
+
+ggplot(fact_out,aes(x=fl1,y=fl2,label=variable))+
+  geom_segment(aes(xend=fl1,yend=fl2,x=0,y=0),arrow = arrow())+
+  geom_text(color='red',nudge_y = -0.05)
 
 ```
 
+```{r}
+# 1) Build a tidy data frame for plotting
+df_plot <- loadings_df %>%
+  dplyr::transmute(
+    variable = stock,
+    industry = industry,
+    fl1 = Factor1,
+    fl2 = Factor2
+  )
 
+# 2) Plot arrows from origin to each loading pair
+library(ggplot2)
+ggplot(df_plot, aes(x = fl1, y = fl2, label = variable)) +
+  geom_segment(aes(xend = fl1, yend = fl2, x = 0, y = 0),
+               arrow = arrow(length = unit(0.15, "cm"))) +
+  geom_text(color = "red", nudge_y = -0.03, size = 3) +
+  labs(x = "Factor 1 loading", y = "Factor 2 loading",
+       title = "Factor loadings (stocks)") +
+  coord_equal() +
+  theme_minimal()
+
+```
+
+```{r}
+# Use your already computed industry_factor table:
+industry_plot <- industry_factor %>%
+  dplyr::rename(fl1 = mean_F1, fl2 = mean_F2)
+
+ggplot(industry_plot, aes(x = fl1, y = fl2, label = industry)) +
+  geom_segment(aes(xend = fl1, yend = fl2, x = 0, y = 0),
+               arrow = arrow(length = unit(0.15, "cm"))) +
+  geom_text(color = "red", nudge_y = -0.02, size = 4) +
+  labs(x = "Factor 1 loading (mean by industry)",
+       y = "Factor 2 loading (mean by industry)",
+       title = "Factor loadings (industry averages)") +
+  coord_equal() +
+  theme_minimal()
+
+```
 
 
 
