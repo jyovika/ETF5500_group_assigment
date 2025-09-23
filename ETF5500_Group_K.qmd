@@ -25,6 +25,88 @@ tibble(stock = names(sample_df)[-1]) %>%
   count(industry)
 ```
 
+
+## Biplot
+
+
+```{r pca_setup, message=FALSE, warning=FALS}
+# Make a numeric data matrix with all stock columns (drop Date)
+stopifnot("Date" %in% names(sample_df))
+X <- sample_df[setdiff(names(sample_df), "Date")]
+
+# Make sure everything is numeric (silently convert if needed)
+X <- X |> mutate(across(everything(), ~ suppressWarnings(as.numeric(.x))))
+
+# If any column became all-NA, drop it (rare safety)
+all_na_cols <- names(X)[sapply(X, function(v) all(is.na(v)))]
+if (length(all_na_cols) > 0) X <- X[ , setdiff(names(X), all_na_cols), drop=FALSE]
+
+# Run PCA on scaled data
+pca <- prcomp(X, center = TRUE, scale. = TRUE)
+
+```
+
+
+```{r gg_biplot, message=FALSE, warning=FALSE}
+
+### 3) Paste this **biplot** chunk right after the PCA chunk
+
+# Build a clean biplot (PC1 vs PC2)
+scores <- as_tibble(pca$x[, 1:2]); names(scores) <- c("PC1","PC2")
+loads  <- as_tibble(pca$rotation[, 1:2], rownames = "id"); names(loads)[2:3] <- c("PC1","PC2")
+loads$industry <- substr(loads$id, 1, 1)
+
+# Scale arrows to fit nicely
+rng_scores  <- max(abs(c(scores$PC1, scores$PC2)), na.rm = TRUE)
+rng_loads   <- max(abs(c(loads$PC1, loads$PC2)),  na.rm = TRUE)
+arrow_scale <- ifelse(rng_loads == 0, 1, 0.9 * rng_scores / rng_loads)
+
+loads <- loads |>
+  mutate(PC1_s = PC1 * arrow_scale,
+         PC2_s = PC2 * arrow_scale,
+         length = sqrt(PC1^2 + PC2^2))
+
+# Label only the 15 longest arrows so it’s not messy
+label_ids <- loads |>
+  arrange(desc(length)) |>
+  slice_head(n = 20) |>
+  pull(id)
+
+ggplot() +
+  geom_point(data = scores, aes(PC1, PC2), alpha = 0.35, size = 1) +
+  geom_segment(data = loads,
+               aes(x = 0, y = 0, xend = PC1_s, yend = PC2_s, colour = industry),
+               linewidth = 0.35, alpha = 0.85) +
+  geom_point(data = loads, aes(PC1_s, PC2_s, colour = industry), size = 0.7) +
+  geom_label_repel(data = loads |> filter(id %in% label_ids),
+                   aes(PC1_s, PC2_s, label = id, colour = industry),
+                   size = 2.7, label.size = 0.15, max.overlaps = Inf, seed = 7) +
+  labs(title = "PCA Biplot (PC1 vs PC2)",
+       subtitle = "Dots = months (scores); Arrows = stocks (loadings). Top 15 labeled.",
+       x = "PC1", y = "PC2", colour = "Industry") +
+  theme_minimal()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Cleaning 
 ```{r, CLeaning}
 sample_df <- sample_df %>%
