@@ -99,9 +99,36 @@ ggplot(industry_ts, aes(x = MarketReturn, y = avg_ret, color = industry_name)) +
 pca_out <- prcomp(sample_df[,-1], scale. = TRUE)
 plot(pca_out, type = "line")
 
+summary(pca_out)
 biplot(pca_out, scale = 0, main = "Distance biplot")
 ```
+## Question 1
+```{r}
+pc_scores <- as.data.frame(pca_out$x)   
+pc1_scores <- pc_scores$PC1
 
+pca_vs_market <- tibble(
+  Date = sample_df$Date,  
+  PC1 = pc1_scores
+) %>%
+  left_join(market_df, by = "Date")
+
+cor(pca_vs_market$PC1, pca_vs_market$MarketReturn, use = "pairwise.complete.obs")
+
+
+ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "PC1 vs Market Return",
+    x = "Market Return",
+    y = "PC1 Score"
+  ) +
+  theme_minimal()
+
+
+
+```
 
 ## References
 
