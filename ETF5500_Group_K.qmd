@@ -83,7 +83,7 @@ industry_ts <- sampleXmarket %>%
 ggplot(industry_ts, aes(x = MarketReturn, y = avg_ret, color = industry_name)) +
   geom_point(alpha = 0.5) +
   geom_smooth() +
-  facet_wrap(~ industry_name, scales = "free_y") +
+  facet_wrap(~ industry_name, scales = "fixed") +
   labs(
     title = "Industry Average Returns vs Market Return",
     x = "Market Return",
@@ -93,6 +93,14 @@ ggplot(industry_ts, aes(x = MarketReturn, y = avg_ret, color = industry_name)) +
   theme(legend.position = "none")
 ```
 
+##PCA
+
+```{r}
+pca_out <- prcomp(sample_df[,-1], scale. = TRUE)
+plot(pca_out, type = "line")
+
+biplot(pca_out, scale = 0, main = "Distance biplot")
+```
 
 
 ## References
