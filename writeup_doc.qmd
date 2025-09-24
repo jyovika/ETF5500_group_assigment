@@ -1,7 +1,7 @@
 ---
-title: "writeup_doc"
+title: "ETF5500 Group Assignment Submission"
 format: pdf
-editor: visual
+author: Girika, Jyovika Aswale, Richa Anghan, Sia Chawla, Siddhi Ajit Jadhav
 ---
 
 ## Common Factors in NYSE Stock Returns (2005–2019): PCA and Factor Analysis with Industry Insights
@@ -71,3 +71,272 @@ These stocks show the **highest alignment with the market factor**, making them 
 6. The biplot of industry-average factor loadings highlights clear differences in systematic exposure across sectors. **Construction (C)** has the strongest loading on **Factor 1**, indicating it is most sensitive to broad market-wide movements. In contrast, **Finance, Insurance and Real Estate (H)** shows the highest loading on **Factor 2**, suggesting it is driven by an additional source of systematic variation, likely tied to financial or credit-related shocks. **Wholesale Trade (F)** and **Mining (B)** also load relatively strongly on Factor 2, whereas **Services (I)** and **Manufacturing (D)** exhibit weaker secondary loadings, reflecting greater idiosyncratic components. The **closeness of vectors** for some industries, such as **Construction (C) and Transportation (E)**, indicates similar response patterns to the latent factors. Overall, the plot shows that while all industries move broadly with the market (positive loadings), **heterogeneity in factor exposures** reveals that different sectors are influenced to varying degrees by market-wide versus sector-specific dynamics.
 
 ![](Image4.jpg){fig-align="center" width=60%}
+
+# Appendix - 
+```{r, message=FALSE}
+library(tidyverse)
+library(zoo)
+library(broom)
+library(kableExtra)
+library(knitr)
+```
+
+```{r}
+market_df <- read.csv(here::here("data/Market.csv"))
+sample_df <- read.csv(here::here("data/SampleK.csv"))
+```
+
+```{r, IDA, results='hide', echo=FALSE}
+colSums(is.na(sample_df))
+
+range(sample_df$Date)
+
+tibble(stock = names(sample_df)[-1]) %>%
+  mutate(industry = substr(stock,1,1)) %>%
+  count(industry)
+```
+
+## Cleaning 
+```{r, CLeaning}
+sample_df <- sample_df %>%
+  mutate(Date = as.yearmon(str_remove(Date, "Y"), format = "%Y M%m"))
+
+market_df <- market_df %>%
+  mutate(Date = as.yearmon(str_remove(Date, "Y"), format = "%Y M%m"))
+  
+```
+
+## EDA
+
+```{r, EDA }
+
+industry_cols <- c(
+  "Mining"               = "#65524d",
+  "Construction"         = "#36827F",
+  "Manufacturing"        = "#7fc29b",
+  "Transport & Utilities"= "#b5ef8a",
+  "Wholesale Trade"      = "#d7f171",
+  "Retail Trade"         = "#aec3b0",
+  "Finance/Insurance/RE" = "#82D4BB",
+  "Services"             = "#3a405a")
+
+stocks_long <- sample_df %>%
+  pivot_longer(-Date, names_to = "stock", values_to = "ret") %>%
+  mutate(industry = substr(stock,1,1),
+         industry_name = recode(industry,
+           B = "Mining",
+           C = "Construction",
+           D = "Manufacturing",
+           E = "Transport & Utilities",
+           F = "Wholesale Trade",
+           G = "Retail Trade",
+           H = "Finance/Insurance/RE",
+           I = "Services"))
+
+ggplot(stocks_long %>%
+         group_by(industry_name) %>%
+         summarise(mean_return = mean(ret, na.rm = TRUE),
+                   .groups = "drop"),
+       aes(x = reorder(industry_name, mean_return),
+           y = mean_return,
+           fill = industry_name)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_manual(values = industry_cols) +
+  labs(title = "Average Monthly Return by Industry",
+       x = "Industry", y = "Mean Return") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+sampleXmarket <- stocks_long %>%
+  left_join(market_df, by = "Date")
+
+industry_ts <- sampleXmarket %>%
+  group_by(Date, industry_name) %>%
+  summarise(
+    avg_ret = mean(ret, na.rm = TRUE),
+    MarketReturn = first(MarketReturn),  
+    .groups = "drop"
+  )
+
+ggplot(industry_ts, aes(x = MarketReturn, y = avg_ret, color = industry_name)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE) +
+  scale_color_manual(values = industry_cols) +
+  facet_wrap(~ industry_name, scales = "fixed") +
+  labs(
+    title = "Industry Average Returns vs Market Return",
+    x = "Market Return",
+    y = "Industry Avg Return"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+##PCA, question 1
+
+```{r}
+pca_out <- prcomp(sample_df[,-1], scale. = TRUE, center = TRUE)
+plot(pca_out, type = "line")
+```
+
+```{r, results='hide'}
+summary(pca_out)
+```
+
+```{r}
+pc1_ts <- pca_out$x[,1]
+if (cor(pc1_ts, market_df$MarketReturn) < 0) {
+  pc1_ts <- -pc1_ts
+  pca_out$rotation[,1] <- -pca_out$rotation[,1]
+}
+
+pca_vs_market <- tibble(
+  Date = sample_df$Date,
+  PC1 = pc1_ts
+) %>%
+  left_join(market_df, by = "Date")
+
+cor(pca_vs_market$PC1, pca_vs_market$MarketReturn, use = "pairwise.complete.obs")
+
+ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
+  geom_point(alpha = 0.6, color = industry_cols["Finance/Insurance/RE"]) +
+  geom_smooth(method = "lm", se = FALSE, color = industry_cols["Mining"]) +
+  labs(
+    title = "PC1 vs Market Return",
+    x = "Market Return",
+    y = "PC1 Score"
+  ) +
+  theme_minimal()
+```
+
+## Question 2
+```{r}
+fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "regression")
+
+loadings_df <- as.data.frame(unclass(fact_out$loadings))
+loadings_df$stock <- rownames(loadings_df)
+loadings_df$industry <- substr(loadings_df$stock, 1, 1)
+
+industry_factor <- loadings_df %>%
+  group_by(industry) %>%
+  summarise(
+    mean_F1 = mean(Factor1, na.rm = TRUE),
+    mean_F2 = mean(Factor2, na.rm = TRUE))
+```
+to compare what happens when we use 3 factors - 
+```{r}
+fact_out_2 <- factanal(sample_df[,-1], factors = 3, rotation = "varimax", scores = "regression")
+
+loadings_df2 <- as.data.frame(unclass(fact_out_2$loadings))
+loadings_df2$stock <- rownames(loadings_df2)
+loadings_df2$industry <- substr(loadings_df2$stock, 1, 1)
+
+industry_factor2 <- loadings_df2 %>%
+  group_by(industry) %>%
+  summarise(
+    mean_F1 = mean(Factor1, na.rm = TRUE),
+    mean_F2 = mean(Factor2, na.rm = TRUE),
+    mean_F3 = mean(Factor3, na.rm = TRUE))
+```
+plot - 
+```{r}
+factor_scores <- as.data.frame(fact_out$scores)
+factor_scores$Date <- sample_df$Date
+
+industry_plot <- industry_factor %>%
+  rename(fl1 = mean_F1, fl2 = mean_F2)
+
+ggplot(industry_plot, aes(x = fl1, y = fl2, label = industry)) +
+  geom_segment(aes(xend = fl1, yend = fl2, x = 0, y = 0),
+               arrow = arrow(length = unit(0.15, "cm"))) +
+  geom_text(color = industry_cols["Construction"], nudge_y = -0.02, size = 4) +
+  labs(x = "Factor 1 loading (mean by industry)",
+       y = "Factor 2 loading (mean by industry)",
+       title = "Factor loadings (industry averages)") +
+  coord_equal() +
+  theme_minimal()
+
+
+```
+
+## Question 4 
+```{r,eval=FALSE}
+uniq <- fact_out$uniquenesses
+fa_tbl <- tibble(StockID = names(uniq),
+                 uniqueness = as.numeric(uniq),
+                 Industry = substr(StockID, 1, 1))
+
+
+fa_tbl %>%
+  mutate(industry_name = recode(Industry,
+    B = "Mining",
+    C = "Construction",
+    D = "Manufacturing",
+    E = "Transport & Utilities",
+    F = "Wholesale Trade",
+    G = "Retail Trade",
+    H = "Finance/Insurance/RE",
+    I = "Services"
+  )) %>%
+  mutate(Industry = paste(Industry, "-", industry_name)) %>%
+  group_by(Industry) %>%
+  summarise(
+    `Mean uniqueness`   = mean(uniqueness, na.rm = TRUE),
+    `Median uniqueness` = median(uniqueness, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  arrange(`Mean uniqueness`) %>%
+  kbl(
+    caption = "Industry-level Uniqueness (Mean and Median)",
+    digits = 3,
+    align = c("l","r","r")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%
+  column_spec(1, bold = TRUE)
+```
+
+## Question 5
+```{r,eval=FALSE}
+cor_with_mkt <- map_dbl(sample_df[,-1], ~ cor(.x, market_df$MarketReturn))
+corr_tbl <- tibble(StockID = names(cor_with_mkt), cor_Market = cor_with_mkt)
+
+load_mat <- as_tibble(pca_out$rotation, rownames = "StockID")
+load_long <- load_mat |>
+  mutate(Industry = substr(StockID, 1, 1)) |>
+  select(StockID, Industry, PC1 = PC1, PC2 = PC2)
+
+load_long |>
+  group_by(Industry) |>
+  summarise(
+    mean_PC1 = mean(PC1),
+    mean_abs_PC1 = mean(abs(PC1)),
+    mean_PC2 = mean(PC2),
+    mean_abs_PC2 = mean(abs(PC2)),
+    .groups = "drop"
+) |> arrange(desc(mean_abs_PC1))
+
+pick_tbl <- load_long |>
+  select(StockID, Industry, PC1) |>
+  inner_join(corr_tbl, by = "StockID") |>
+  mutate(abs_PC1 = abs(PC1)) |>
+  arrange(desc(abs_PC1), desc(cor_Market))
+
+head(pick_tbl, 5) %>%
+  kbl(
+    caption = "Top 5 Stocks by Absolute PC1 Loading and Market Correlation",
+    digits = 3,
+    align = c("l","l","r","r","r")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%
+  column_spec(1, bold = TRUE)
+```
+
