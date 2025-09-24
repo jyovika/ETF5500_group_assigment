@@ -30,9 +30,6 @@ FA was estimated via maximum likelihood with varimax rotation, guided by PCA and
 3. **Stock Selection**\
 Stocks were ranked by PC1 loading magnitude and market correlation. The top five stocks were chosen as most sensitive to market movements.
 
-
-
-
 ### Results 
 
 1.The **first principal component (PC1)** is **highly aligned with the S&P500 market return**, with a **correlation of 0.95**. This means that **around 90% of the variation in PC1 can be explained by market movements**. The **scatterplot of PC1 scores against market returns** shows a **clear positive linear relationship**, confirming that **PC1 effectively represents the market factor**. Industries such as **Finance** and **Construction** load most strongly on **PC1**, reflecting their **high systematic exposure**, while sectors like **Retail** and **Services** retain **higher uniqueness**, indicating a **larger idiosyncratic component**.
@@ -44,9 +41,6 @@ Stocks were ranked by PC1 loading magnitude and market correlation. The top five
 
 ![](Image1.png){fig-align="center" width=50%}
 
-
-
-
 3. From the factor loadings, it is evident that **all industry groups have positive loadings on the first latent factor**, meaning they generally **move in the same direction as the dominant market factor**, with **Construction (C)** and **Finance, Insurance and Real Estate (H)** showing particularly strong alignment. On the **second factor**, however, there is more variation: while **Finance (H)**, **Wholesale Trade (F)**, and **Mining (B)** load positively, some industries such as **Retail (G)** and **Services (I)** have relatively **small or weaker loadings**, suggesting **lower sensitivity or idiosyncratic movement**. Overall, the **heterogeneity across industry groups** indicates that while most sectors are jointly exposed to **broad market forces**, **certain industries retain more unique or sector-specific risk components**, highlighting the importance of considering **multiple factors** to capture differences in **systematic versus idiosyncratic variation**.
 
 4. From the uniqueness results, **Finance, Insurance and Real Estate (H)** shows the **lowest mean (0.51) and median (0.46) uniqueness**, indicating that a larger portion of its variation is explained by common factors rather than idiosyncratic risk. This implies that **Finance is the industry most exposed to systematic risk**, as its returns move more closely with market-wide influences that cannot be diversified away. By contrast, industries such as **Manufacturing (D)**, **Retail (G)**, and **Services (I)** display the **highest uniqueness values (above 0.82)**, suggesting that their variation is more idiosyncratic and less tied to systematic market factors. Overall, the results highlight that **systematic risk is concentrated in the Finance sector**, while other industries retain a greater degree of diversifiable, industry-specific variation.
@@ -55,24 +49,47 @@ Stocks were ranked by PC1 loading magnitude and market correlation. The top five
 
 5. If the investor’s goal is to hold stocks that **move closely with the market**, the selection should be based on **high correlations with the market (cor_Market)** and **large PC1 loadings**, since PC1 effectively represents the market factor. Among the available stocks in **Finance, Insurance and Real Estate (H)**, the five strongest candidates are:
 
-- **H90004** (cor_Market = 0.97, PC1 = 0.1854)  
-- **H88608** (cor_Market = 0.92, PC1 = 0.1905)  
-- **H88291** (cor_Market = 0.93, PC1 = 0.1750)  
-- **H89994** (cor_Market = 0.88, PC1 = 0.1760)  
-- **H83218** (cor_Market = 0.78, PC1 = 0.1545)  
-
-These stocks show the **highest alignment with the market factor**, making them the most suitable for an investor seeking exposure to systematic risk. Notably, **H90004** and **H88608** stand out as the strongest choices, given their combination of **high factor loadings** and **very strong correlation with market returns**.
-
 ![](Image3.png){fig-align="center" width=50%}
-
-
-
+These stocks show the **highest alignment with the market factor**, making them the most suitable for an investor seeking exposure to systematic risk. Notably, **H90004** and **H88608** stand out as the strongest choices, given their combination of **high factor loadings** and **very strong correlation with market returns**.
 
 6. The biplot of industry-average factor loadings highlights clear differences in systematic exposure across sectors. **Construction (C)** has the strongest loading on **Factor 1**, indicating it is most sensitive to broad market-wide movements. In contrast, **Finance, Insurance and Real Estate (H)** shows the highest loading on **Factor 2**, suggesting it is driven by an additional source of systematic variation, likely tied to financial or credit-related shocks. **Wholesale Trade (F)** and **Mining (B)** also load relatively strongly on Factor 2, whereas **Services (I)** and **Manufacturing (D)** exhibit weaker secondary loadings, reflecting greater idiosyncratic components. The **closeness of vectors** for some industries, such as **Construction (C) and Transportation (E)**, indicates similar response patterns to the latent factors. Overall, the plot shows that while all industries move broadly with the market (positive loadings), **heterogeneity in factor exposures** reveals that different sectors are influenced to varying degrees by market-wide versus sector-specific dynamics.
 
 ![](Image4.jpg){fig-align="center" width=60%}
 
-# Appendix - 
+## References
+
+1. Date formating using zoo in R. (2017, January). [Online post]. <https://stackoverflow.com/questions/41588737/date-formating-using-zoo-in-r?rq=3>
+
+2. Principal component analysis in R. (2012, May). [Online post]. <https://stats.stackexchange.com/questions/28996/principal-component-analysis-in-r>
+
+3. Performing Analysis of a Factor in R Programming—Factanal(). GeeksforGeeks. <https://www.geeksforgeeks.org/r-language/performing-analysis-of-a-factor-in-r-programming-factanal-function/>
+
+4. Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L, Hester J, Kuhn
+  M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi K, Vaughan D,
+  Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” _Journal of Open Source Software_, *4*(43),
+  1686. doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>.
+  
+5. Zeileis A, Grothendieck G (2005). “zoo: S3 Infrastructure for Regular and Irregular Time Series.” _Journal of
+  Statistical Software_, *14*(6), 1-27. doi:10.18637/jss.v014.i06 <https://doi.org/10.18637/jss.v014.i06>.
+  
+6. Robinson D, Hayes A, Couch S (2024). _broom: Convert Statistical Objects into Tidy Tibbles_. R package
+  version 1.0.6, <https://CRAN.R-project.org/package=broom>.
+  
+7. Zhu H (2024). _kableExtra: Construct Complex Table with 'kable' and Pipe Syntax_. R package version 1.4.0,
+  <https://CRAN.R-project.org/package=kableExtra>.
+  
+8. Xie Y (2025). _knitr: A General-Purpose Package for Dynamic Report Generation in R_. R package version 1.50,
+  <https://yihui.org/knitr/>.
+
+9. Yihui Xie (2015) Dynamic Documents with R and knitr. 2nd edition. Chapman and Hall/CRC. ISBN 978-1498716963
+
+10. Yihui Xie (2014) knitr: A Comprehensive Tool for Reproducible Research in R. In Victoria Stodden, Friedrich
+  Leisch and Roger D. Peng, editors, Implementing Reproducible Computational Research. Chapman and Hall/CRC.
+  ISBN 978-1466561595
+
+
+
+## Appendix - 
 ```{r, message=FALSE}
 library(tidyverse)
 library(zoo)
@@ -96,7 +113,7 @@ tibble(stock = names(sample_df)[-1]) %>%
   count(industry)
 ```
 
-## Cleaning 
+### Cleaning 
 ```{r, CLeaning}
 sample_df <- sample_df %>%
   mutate(Date = as.yearmon(str_remove(Date, "Y"), format = "%Y M%m"))
@@ -106,7 +123,7 @@ market_df <- market_df %>%
   
 ```
 
-## EDA
+### EDA
 
 ```{r, EDA }
 
@@ -173,7 +190,7 @@ ggplot(industry_ts, aes(x = MarketReturn, y = avg_ret, color = industry_name)) +
   theme(legend.position = "none")
 ```
 
-##PCA, question 1
+### PCA, question 1
 
 ```{r}
 pca_out <- prcomp(sample_df[,-1], scale. = TRUE, center = TRUE)
@@ -210,7 +227,7 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
   theme_minimal()
 ```
 
-## Question 2
+### Question 2
 ```{r}
 fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "regression")
 
@@ -260,7 +277,7 @@ ggplot(industry_plot, aes(x = fl1, y = fl2, label = industry)) +
 
 ```
 
-## Question 4 
+### Question 4 
 ```{r,eval=FALSE}
 uniq <- fact_out$uniquenesses
 fa_tbl <- tibble(StockID = names(uniq),
@@ -300,7 +317,7 @@ fa_tbl %>%
   column_spec(1, bold = TRUE)
 ```
 
-## Question 5
+### Question 5
 ```{r,eval=FALSE}
 cor_with_mkt <- map_dbl(sample_df[,-1], ~ cor(.x, market_df$MarketReturn))
 corr_tbl <- tibble(StockID = names(cor_with_mkt), cor_Market = cor_with_mkt)
