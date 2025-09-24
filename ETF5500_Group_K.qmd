@@ -133,7 +133,7 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
 ## Question 2
 **so we do this first**
 ```{r}
-fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "regression")
+fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "none")
 
 loadings_df <- as.data.frame(unclass(fact_out$loadings))
 loadings_df$stock <- rownames(loadings_df)
@@ -220,6 +220,53 @@ ggplot(industry_plot, aes(x = fl1, y = fl2, label = industry)) +
 
 ```
 
+## Question 4 
+```{r}
+
+uniq <- fact_out$uniquenesses
+fa_tbl <- tibble(StockID = names(uniq),
+                 uniqueness = as.numeric(uniq),
+                 Industry = substr(StockID, 1, 1))
+
+
+fa_tbl %>%
+  group_by(Industry) %>%
+  summarise(
+    mean_uniqueness = mean(uniqueness),
+    median_uniqueness = median(uniqueness),
+    .groups = "drop") %>% 
+  arrange(mean_uniqueness)
+```
+
+## Question 5
+```{r}
+
+cor_with_mkt <- map_dbl(sample_df[,-1], ~ cor(.x, market_df$MarketReturn))
+corr_tbl <- tibble(StockID = names(cor_with_mkt), cor_Market = cor_with_mkt)
+
+load_mat <- as_tibble(pca_out$rotation, rownames = "StockID")
+load_long <- load_mat |>
+  mutate(Industry = substr(StockID, 1, 1)) |>
+  select(StockID, Industry, PC1 = PC1, PC2 = PC2)
+
+# average absolute loading by industry (who loads strongest?)
+load_long |>
+  group_by(Industry) |>
+  summarise(
+    mean_PC1 = mean(PC1),
+    mean_abs_PC1 = mean(abs(PC1)),
+    mean_PC2 = mean(PC2),
+    mean_abs_PC2 = mean(abs(PC2)),
+    .groups = "drop"
+) |> arrange(desc(mean_abs_PC1))
+pick_tbl <- load_long |>
+  select(StockID, Industry, PC1) |>
+  inner_join(corr_tbl, by = "StockID") |>
+  mutate(abs_PC1 = abs(PC1)) |>
+  arrange(desc(abs_PC1), desc(cor_Market))
+
+head(pick_tbl, 5)
+```
 
 
 
