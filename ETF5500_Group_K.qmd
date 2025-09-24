@@ -133,7 +133,7 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
 ## Question 2
 **so we do this first**
 ```{r}
-fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "none")
+fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "regression")
 
 loadings_df <- as.data.frame(unclass(fact_out$loadings))
 loadings_df$stock <- rownames(loadings_df)
@@ -164,7 +164,7 @@ ggplot(factor_scores, aes(x = Factor1, y = Factor2, color = as.numeric(Date))) +
 ```
 **then we show with 3 factors**
 ```{r}
-fact_out <- factanal(sample_df[,-1], factors = 3, rotation = "varimax", scores = "regression")
+fact_out_2 <- factanal(sample_df[,-1], factors = 3, rotation = "varimax", scores = "regression")
 
 loadings_df2 <- as.data.frame(unclass(fact_out_2$loadings))
 loadings_df2$stock <- rownames(loadings_df2)
