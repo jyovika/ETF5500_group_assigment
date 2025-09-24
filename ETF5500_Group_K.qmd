@@ -7,6 +7,7 @@ author: Girika, Jyovika Aswale, Richa Anghan, Sia Chawla, Siddhi Ajit Jadhav
 ```{r, message=FALSE}
 library(tidyverse)
 library(zoo)
+library(broom)
 ```
 
 
@@ -15,7 +16,7 @@ market_df <- read.csv(here::here("data/Market.csv"))
 sample_df <- read.csv(here::here("data/SampleK.csv"))
 ```
 
-```{r, IDA results='hide', echo=FALSE}
+```{r, IDA_results='hide', echo=FALSE}
 colSums(is.na(sample_df))
 
 range(sample_df$Date)
@@ -83,7 +84,7 @@ industry_ts <- sampleXmarket %>%
 ggplot(industry_ts, aes(x = MarketReturn, y = avg_ret, color = industry_name)) +
   geom_point(alpha = 0.5) +
   geom_smooth() +
-  facet_wrap(~ industry_name, scales = "free_y") +
+  facet_wrap(~ industry_name, scales = "fixed") +
   labs(
     title = "Industry Average Returns vs Market Return",
     x = "Market Return",
@@ -92,6 +93,133 @@ ggplot(industry_ts, aes(x = MarketReturn, y = avg_ret, color = industry_name)) +
   theme_minimal() +
   theme(legend.position = "none")
 ```
+
+##PCA
+
+```{r}
+pca_out <- prcomp(sample_df[,-1], scale. = TRUE)
+plot(pca_out, type = "line")
+
+summary(pca_out)
+```
+## Question 1
+```{r}
+pc_scores <- as.data.frame(pca_out$x)   
+pc1_scores <- pc_scores$PC1
+
+pca_vs_market <- tibble(
+  Date = sample_df$Date,  
+  PC1 = pc1_scores) %>%
+  left_join(market_df, by = "Date")
+
+cor(pca_vs_market$PC1, pca_vs_market$MarketReturn, use = "pairwise.complete.obs")
+
+
+ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(
+    title = "PC1 vs Market Return",
+    x = "Market Return",
+    y = "PC1 Score"
+  ) +
+  theme_minimal()
+
+
+
+```
+
+
+## Question 2
+**so we do this first**
+```{r}
+fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "regression")
+
+loadings_df <- as.data.frame(unclass(fact_out$loadings))
+loadings_df$stock <- rownames(loadings_df)
+loadings_df$industry <- substr(loadings_df$stock, 1, 1)
+
+factor_scores <- as.data.frame(fact_out$scores)
+factor_scores$Date <- sample_df$Date
+
+industry_factor <- loadings_df %>%
+  group_by(industry) %>%
+  summarise(
+    mean_F1 = mean(Factor1, na.rm = TRUE),
+    mean_F2 = mean(Factor2, na.rm = TRUE)
+  )
+
+# Plot factor time series
+ggplot(factor_scores, aes(x = Factor1, y = Factor2, label = Date)) +
+  geom_text(size = 3) +
+  labs(title = "Factor scores", x = "Factor1", y = "Factor2") +
+  theme_minimal() +
+  theme(text = element_text(size = 12))
+
+ggplot(factor_scores, aes(x = Factor1, y = Factor2, color = as.numeric(Date))) +
+  geom_point(size = 2, alpha = 0.6) +
+  scale_color_viridis_c(option = "plasma") +
+  labs(title = "Factor scores", x = "Factor1", y = "Factor2", color = "Time") +
+  theme_minimal()
+```
+**then we show with 3 factors**
+```{r}
+fact_out <- factanal(sample_df[,-1], factors = 3, rotation = "varimax", scores = "regression")
+
+loadings_df2 <- as.data.frame(unclass(fact_out_2$loadings))
+loadings_df2$stock <- rownames(loadings_df2)
+loadings_df2$industry <- substr(loadings_df2$stock, 1, 1)
+
+industry_factor2 <- loadings_df2 %>%
+  group_by(industry) %>%
+  summarise(
+    mean_F1 = mean(Factor1, na.rm = TRUE),
+    mean_F2 = mean(Factor2, na.rm = TRUE),
+    mean_F3 = mean(Factor3, na.rm = TRUE))
+
+
+```
+
+
+
+```{r}
+df_plot <- loadings_df %>%
+  transmute(
+    variable = stock,
+    industry = industry,
+    fl1 = Factor1,
+    fl2 = Factor2
+  )
+
+ggplot(df_plot, aes(x = fl1, y = fl2, label = variable)) +
+  geom_segment(aes(xend = fl1, yend = fl2, x = 0, y = 0),
+               arrow = arrow(length = unit(0.15, "cm"))) +
+  geom_text(color = "red", nudge_y = -0.03, size = 3) +
+  labs(x = "Factor 1 loading", y = "Factor 2 loading",
+       title = "Factor loadings (stocks)") +
+  coord_equal() +
+  theme_minimal()
+```
+
+## plot for Q2
+
+```{r}
+ 
+industry_plot <- industry_factor %>%
+  rename(fl1 = mean_F1, fl2 = mean_F2)
+
+ggplot(industry_plot, aes(x = fl1, y = fl2, label = industry)) +
+  geom_segment(aes(xend = fl1, yend = fl2, x = 0, y = 0),
+               arrow = arrow(length = unit(0.15, "cm"))) +
+  geom_text(color = "red", nudge_y = -0.02, size = 4) +
+  labs(x = "Factor 1 loading (mean by industry)",
+       y = "Factor 2 loading (mean by industry)",
+       title = "Factor loadings (industry averages)") +
+  coord_equal() +
+  theme_minimal()
+
+```
+
 
 
 
