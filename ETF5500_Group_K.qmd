@@ -1,6 +1,6 @@
 ---
 title: "ETF5500 Group Assignment"
-format: pdf
+format: html
 author: Girika, Jyovika Aswale, Richa Anghan, Sia Chawla, Siddhi Ajit Jadhav
 ---
 
@@ -8,6 +8,8 @@ author: Girika, Jyovika Aswale, Richa Anghan, Sia Chawla, Siddhi Ajit Jadhav
 library(tidyverse)
 library(zoo)
 library(broom)
+library(kableExtra)
+library(knitr)
 ```
 
 
@@ -97,10 +99,6 @@ ggplot(industry_ts, aes(x = MarketReturn, y = avg_ret, color = industry_name)) +
 ##PCA
 
 ```{r}
-
-
-
-
 pca_out <- prcomp(sample_df[,-1], scale. = TRUE, center = TRUE)
 plot(pca_out, type = "line")
 
@@ -113,10 +111,6 @@ if (cor(pc1_ts, market_df$MarketReturn) < 0) {
 }
 
 cor(pc1_ts, market_df$MarketReturn)
-
-
-
-
 ```
 ## Question 1
 ```{r}
@@ -142,9 +136,6 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
   theme_minimal()
 
 
-
-
-
 ```
 
 
@@ -162,12 +153,23 @@ loadings_df$industry <- substr(loadings_df$stock, 1, 1)
 factor_scores <- as.data.frame(fact_out$scores)
 factor_scores$Date <- sample_df$Date
 
-industry_factor <- loadings_df %>%
-  group_by(industry) %>%
-  summarise(
-    mean_F1 = mean(Factor1, na.rm = TRUE),
-    mean_F2 = mean(Factor2, na.rm = TRUE)
-  )
+industry_factor %>%
+  rename(
+    Industry = industry,
+    `Mean F1` = mean_F1,
+    `Mean F2` = mean_F2
+  ) %>%
+  kbl(
+    caption = "Mean Factor Loadings by Industry",
+    digits = 3,
+    align = c("l","r","r")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%  # dark header
+  column_spec(1, bold = TRUE)
 
 # Plot factor time series
 ggplot(factor_scores, aes(x = Factor1, y = Factor2, label = Date)) +
@@ -242,7 +244,6 @@ ggplot(industry_plot, aes(x = fl1, y = fl2, label = industry)) +
 
 ## Question 4 
 ```{r}
-
 uniq <- fact_out$uniquenesses
 fa_tbl <- tibble(StockID = names(uniq),
                  uniqueness = as.numeric(uniq),
@@ -252,10 +253,22 @@ fa_tbl <- tibble(StockID = names(uniq),
 fa_tbl %>%
   group_by(Industry) %>%
   summarise(
-    mean_uniqueness = mean(uniqueness),
-    median_uniqueness = median(uniqueness),
-    .groups = "drop") %>% 
-  arrange(mean_uniqueness)
+    `Mean uniqueness`   = mean(uniqueness, na.rm = TRUE),
+    `Median uniqueness` = median(uniqueness, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  arrange(`Mean uniqueness`) %>%
+  kbl(
+    caption = "Industry-level Uniqueness (Mean and Median)",
+    digits = 3,
+    align = c("l","r","r")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%  # dark header
+  column_spec(1, bold = TRUE)
 ```
 
 ## Question 5
@@ -285,7 +298,18 @@ pick_tbl <- load_long |>
   mutate(abs_PC1 = abs(PC1)) |>
   arrange(desc(abs_PC1), desc(cor_Market))
 
-head(pick_tbl, 5)
+head(pick_tbl, 5) %>%
+  kbl(
+    caption = "Top 5 Stocks by Absolute PC1 Loading and Market Correlation",
+    digits = 3,
+    align = c("l","l","r","r","r")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%
+  column_spec(1, bold = TRUE)
 ```
 
 
