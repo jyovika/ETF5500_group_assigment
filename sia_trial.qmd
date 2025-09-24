@@ -1,0 +1,181 @@
+---
+title: "assignment_sia"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+
+# Load data
+stocks <- read_csv("data/SampleK.csv")
+market <- read_csv("data/Market.csv")
+
+# Merge with market return
+data <- stocks %>%
+  left_join(market, by = "Date")
+
+# Convert to wide -> long for industry analysis
+stocks_long <- stocks %>%
+  pivot_longer(-Date, names_to = "StockID", values_to = "Return") %>%
+  mutate(Industry = substr(StockID, 1, 1))  # first letter = industry
+
+# Quick check: number of stocks per industry
+table(stocks_long$Industry)
+
+# Summary statistics by industry
+stocks_long %>%
+  group_by(Industry) %>%
+  summarise(mean_ret = mean(Return),
+            sd_ret   = sd(Return))
+
+```
+
+```         
+```
+
+```{r}
+stocks_avg <- stocks %>%
+  select(-Date) %>%
+  rowMeans()
+
+plot_df <- tibble(Date = stocks$Date,
+                  AvgStock = stocks_avg,
+                  Market = market$MarketReturn)
+
+ggplot(plot_df, aes(x = AvgStock, y = Market)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  labs(title="Market vs Average Stock Return")
+
+```
+
+```         
+```
+
+```{r}
+# Standardize stock returns (important!)
+X <- scale(stocks[,-1])   # remove Date column
+
+# PCA
+pca_out <- prcomp(X, scale.=TRUE)
+
+# Variance explained
+summary(pca_out)
+
+# Scree plot
+plot(pca_out, type="l")
+
+# Loadings (weights of each stock on PC1, PC2, etc.)
+loadings <- pca_out$rotation
+
+# PC1 time series vs Market
+pc1_ts <- pca_out$x[,1]
+plot_df2 <- tibble(Date = stocks$Date,
+                   PC1 = pc1_ts,
+                   Market = market$MarketReturn)
+
+ggplot(plot_df2, aes(x=Market, y=PC1)) +
+  geom_point() +
+  geom_smooth(method="lm")
+
+```
+
+
+
+```{r}
+# matrix for PCA (variables = stocks). We standardize.
+X <- scale(stocks[,-1])
+
+# PCA
+pca_out <- prcomp(X, center = TRUE, scale. = TRUE)
+
+# variance explained
+summary(pca_out)          # copy the importance table into appendix
+eigs <- pca_out$sdev^2
+
+# scree
+plot(eigs, type="b", xlab="Component", ylab="Eigenvalue",
+     main="Scree plot (PCA)")
+
+# PC1 time series vs market (evidence whether PC1 is a ‘market’ component)
+pc1_ts <- pca_out$x[,1]
+cor(pc1_ts, market$MarketReturn)      # number for report
+
+ggplot(tibble(Market = market$MarketReturn, PC1 = pc1_ts),
+       aes(Market, PC1)) +
+  geom_point(alpha=.6) +
+  geom_smooth(method="lm", se=FALSE) +
+  labs(title="PC1 vs Market return")
+
+```
+
+
+
+```{r}
+load_mat <- as_tibble(pca_out$rotation, rownames = "StockID")
+load_long <- load_mat |>
+  mutate(Industry = substr(StockID, 1, 1)) |>
+  select(StockID, Industry, PC1 = PC1, PC2 = PC2)
+
+# average absolute loading by industry (who loads strongest?)
+load_long |>
+  group_by(Industry) |>
+  summarise(
+    mean_PC1 = mean(PC1),
+    mean_abs_PC1 = mean(abs(PC1)),
+    mean_PC2 = mean(PC2),
+    mean_abs_PC2 = mean(abs(PC2)),
+    .groups = "drop"
+) |> arrange(desc(mean_abs_PC1))
+
+```
+
+
+
+```{r}
+# choose factor count guided by PCA scree (often 2–4). Start with 2 or 3.
+k <- 3
+
+fa_out <- factanal(X, factors = k, rotation = "varimax",
+                   scores = "none", lower = 0.05)
+
+# loadings matrix
+print(fa_out$loadings, cutoff = 0.3)  # readable table
+
+# uniquenesses (1 - communality): lower uniqueness => more systematic risk
+uniq <- fa_out$uniquenesses
+fa_tbl <- tibble(StockID = names(uniq),
+                 uniqueness = as.numeric(uniq),
+                 Industry = substr(StockID, 1, 1))
+
+# industry-level systematic risk proxy (lower uniq => higher common variance)
+fa_tbl |>
+  group_by(Industry) |>
+  summarise(
+    mean_uniqueness = mean(uniqueness),
+    median_uniqueness = median(uniqueness),
+    .groups = "drop"
+) |> arrange(mean_uniqueness)
+
+```
+
+
+```{r}
+# correlation of each stock with Market
+cor_with_mkt <- map_dbl(stocks[,-1], ~ cor(.x, market$MarketReturn))
+corr_tbl <- tibble(StockID = names(cor_with_mkt), cor_Market = cor_with_mkt)
+
+# join with PC1 loadings
+pick_tbl <- load_long |>
+  select(StockID, Industry, PC1) |>
+  inner_join(corr_tbl, by = "StockID") |>
+  mutate(abs_PC1 = abs(PC1)) |>
+  arrange(desc(abs_PC1), desc(cor_Market))
+
+head(pick_tbl, 5)
+
+
+
+```
+
