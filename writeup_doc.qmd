@@ -20,17 +20,39 @@ We analyze *SampleK.csv* (91 stocks, labeled by industry + PERMNO) and *Market.c
 
 ### Methods 
 
-**Principal Component Analysis (PCA)**
+1. **Principal Component Analysis (PCA)**
 
 PCA was applied to the standardized stock return matrix to identify latent components. Both the scree plot and the Kaiser criterion were examined. Setting a lower bound for uniqueness at 0.05, the Kaiser rule also suggested retaining two components, consistent with the scree plot, as capturing meaningful common variation. PC1 was oriented to correlate positively with the market return, and industry-average loadings were computed to compare sector exposures.
 
-**Factor Analysis (FA)**\
+2. **Factor Analysis (FA)**\
 FA was estimated via maximum likelihood with varimax rotation, guided by PCA and model fit. A uniqueness bound of 0.05 ensured convergence. Industry averages of loadings and uniqueness distinguished systematic from idiosyncratic risk.
 
-**Stock Selection**\
+3. **Stock Selection**\
 Stocks were ranked by PC1 loading magnitude and market correlation. The top five stocks were chosen as most sensitive to market movements.
 
-**Clustering Extension**\
+4. **Clustering Extension**\
 Hierarchical clustering (Ward’s method) on industry-average returns complemented PCA and FA, highlighting sector similarities.
 
+
+### Results 
+
+1.The **first principal component (PC1)** is **highly aligned with the S&P500 market return**, with a **correlation of 0.95**. This means that **around 90% of the variation in PC1 can be explained by market movements**. The **scatterplot of PC1 scores against market returns** shows a **clear positive linear relationship**, confirming that **PC1 effectively represents the market factor**. Industries such as **Finance** and **Construction** load most strongly on **PC1**, reflecting their **high systematic exposure**, while sectors like **Retail** and **Services** retain **higher uniqueness**, indicating a **larger idiosyncratic component**.
+
+
+2. **Construction (C)** exhibits the **highest loading on the first latent factor**, demonstrating that it is the industry most sensitive to **broad market-wide variation**, with **Finance, Insurance and Real Estate (H)** and **Transportation (E)** also showing substantial exposure. However, the analysis shifts when examining the **second latent factor**, where **Finance, Insurance and Real Estate (H)** records the **strongest loading**, followed by **Wholesale Trade (F)** and **Mining (B)**. This indicates that while **Construction dominates the primary, market-like factor**, **Finance is the key driver of the secondary dimension of systematic variation**, likely reflecting **credit- or sector-specific financial influences** distinct from the **general market**. **This highlights the importance of considering multiple latent factors in factor analysis**, as **different industries emerge as dominant depending on the dimension of systematic variation under review.**
+
+
+3. From the factor loadings, it is evident that **all industry groups have positive loadings on the first latent factor**, meaning they generally **move in the same direction as the dominant market factor**, with **Construction (C)** and **Finance, Insurance and Real Estate (H)** showing particularly strong alignment. On the **second factor**, however, there is more variation: while **Finance (H)**, **Wholesale Trade (F)**, and **Mining (B)** load positively, some industries such as **Retail (G)** and **Services (I)** have relatively **small or weaker loadings**, suggesting **lower sensitivity or idiosyncratic movement**. Overall, the **heterogeneity across industry groups** indicates that while most sectors are jointly exposed to **broad market forces**, **certain industries retain more unique or sector-specific risk components**, highlighting the importance of considering **multiple factors** to capture differences in **systematic versus idiosyncratic variation**.
+
+4. From the uniqueness results, **Finance, Insurance and Real Estate (H)** shows the **lowest mean (0.51) and median (0.46) uniqueness**, indicating that a larger portion of its variation is explained by common factors rather than idiosyncratic risk. This implies that **Finance is the industry most exposed to systematic risk**, as its returns move more closely with market-wide influences that cannot be diversified away. By contrast, industries such as **Manufacturing (D)**, **Retail (G)**, and **Services (I)** display the **highest uniqueness values (above 0.82)**, suggesting that their variation is more idiosyncratic and less tied to systematic market factors. Overall, the results highlight that **systematic risk is concentrated in the Finance sector**, while other industries retain a greater degree of diversifiable, industry-specific variation.
+
+5. If the investor’s goal is to hold stocks that **move closely with the market**, the selection should be based on **high correlations with the market (cor_Market)** and **large PC1 loadings**, since PC1 effectively represents the market factor. Among the available stocks in **Finance, Insurance and Real Estate (H)**, the five strongest candidates are:
+
+- **H90004** (cor_Market = 0.97, PC1 = 0.1854)  
+- **H88608** (cor_Market = 0.92, PC1 = 0.1905)  
+- **H88291** (cor_Market = 0.93, PC1 = 0.1750)  
+- **H89994** (cor_Market = 0.88, PC1 = 0.1760)  
+- **H83218** (cor_Market = 0.78, PC1 = 0.1545)  
+
+These stocks show the **highest alignment with the market factor**, making them the most suitable for an investor seeking exposure to systematic risk. Notably, **H90004** and **H88608** stand out as the strongest choices, given their combination of **high factor loadings** and **very strong correlation with market returns**.
 
