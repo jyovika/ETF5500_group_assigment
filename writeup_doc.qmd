@@ -4,3 +4,33 @@ format: pdf
 editor: visual
 ---
 
+## Common Factors in NYSE Stock Returns (2005–2019): PCA and Factor Analysis with Industry Insights
+
+### Executive Summary 
+
+We analyze monthly returns for 91 NYSE-listed stocks (January 2005–December 2019) along with the S&P 500 market return. Principal Component Analysis (PCA) and Factor Analysis (FA) both reveal that the first latent dimension represents a broad **market factor**. After orienting the sign, the first principal component correlates strongly with the market return (≈ +0.95).
+
+Industry-level patterns are pronounced. **Finance, Insurance, and Real Estate (H)** and **Construction (C)** show the largest absolute loadings on the first factor, while **Retail (G)** and **Services (I)** load more weakly. Factor Analysis confirms that Finance has the lowest mean uniqueness (\~0.47), indicating a higher proportion of systematic (non-diversifiable) variance, whereas Retail and Services are primarily driven by idiosyncratic risk.
+
+For investors seeking exposure aligned with overall market movements, Finance-sector stocks are most suitable. We specifically recommend **H88608, H90004, H89994, H88291, and H83218**. A complementary clustering analysis at the industry level provides further support for these findings.
+
+### Data and Preparation 
+
+We analyze *SampleK.csv* (91 stocks, labeled by industry + PERMNO) and *Market.csv* (S&P 500 returns). Dates were aligned to monthly frequency, with no missing data. Returns were standardized for comparability. Exploratory summaries and correlations showed strong cross-stock dependence, supporting the use of dimension reduction.
+
+### Methods 
+
+**Principal Component Analysis (PCA)**
+
+PCA was applied to the standardized stock return matrix to identify latent components. Both the scree plot and the Kaiser criterion were examined. Setting a lower bound for uniqueness at 0.05, the Kaiser rule also suggested retaining two components, consistent with the scree plot, as capturing meaningful common variation. PC1 was oriented to correlate positively with the market return, and industry-average loadings were computed to compare sector exposures.
+
+**Factor Analysis (FA)**\
+FA was estimated via maximum likelihood with varimax rotation, guided by PCA and model fit. A uniqueness bound of 0.05 ensured convergence. Industry averages of loadings and uniqueness distinguished systematic from idiosyncratic risk.
+
+**Stock Selection**\
+Stocks were ranked by PC1 loading magnitude and market correlation. The top five stocks were chosen as most sensitive to market movements.
+
+**Clustering Extension**\
+Hierarchical clustering (Ward’s method) on industry-average returns complemented PCA and FA, highlighting sector similarities.
+
+
