@@ -154,11 +154,20 @@ factor_scores <- as.data.frame(fact_out$scores)
 factor_scores$Date <- sample_df$Date
 
 industry_factor %>%
-  rename(
-    Industry = industry,
-    `Mean F1` = mean_F1,
-    `Mean F2` = mean_F2
-  ) %>%
+  mutate(industry_name = recode(industry,
+    B = "Mining",
+    C = "Construction",
+    D = "Manufacturing",
+    E = "Transport & Utilities",
+    F = "Wholesale Trade",
+    G = "Retail Trade",
+    H = "Finance/Insurance/RE",
+    I = "Services"
+  )) %>%
+  mutate(Industry = paste(industry, "-", industry_name)) %>%
+  select(Industry, 
+         `Mean F1` = mean_F1, 
+         `Mean F2` = mean_F2) %>%
   kbl(
     caption = "Mean Factor Loadings by Industry",
     digits = 3,
@@ -168,7 +177,7 @@ industry_factor %>%
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     full_width = FALSE
   ) %>%
-  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%  # dark header
+  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%
   column_spec(1, bold = TRUE)
 
 # Plot factor time series
@@ -251,6 +260,17 @@ fa_tbl <- tibble(StockID = names(uniq),
 
 
 fa_tbl %>%
+  mutate(industry_name = recode(Industry,
+    B = "Mining",
+    C = "Construction",
+    D = "Manufacturing",
+    E = "Transport & Utilities",
+    F = "Wholesale Trade",
+    G = "Retail Trade",
+    H = "Finance/Insurance/RE",
+    I = "Services"
+  )) %>%
+  mutate(Industry = paste(Industry, "-", industry_name)) %>%
   group_by(Industry) %>%
   summarise(
     `Mean uniqueness`   = mean(uniqueness, na.rm = TRUE),
@@ -267,7 +287,7 @@ fa_tbl %>%
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
     full_width = FALSE
   ) %>%
-  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%  # dark header
+  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%
   column_spec(1, bold = TRUE)
 ```
 
@@ -292,6 +312,7 @@ load_long |>
     mean_abs_PC2 = mean(abs(PC2)),
     .groups = "drop"
 ) |> arrange(desc(mean_abs_PC1))
+
 pick_tbl <- load_long |>
   select(StockID, Industry, PC1) |>
   inner_join(corr_tbl, by = "StockID") |>
