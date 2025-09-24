@@ -143,7 +143,7 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
 ```
 
 ## Question 2
-```{r}
+```{reval=FALSE}
 fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "regression")
 
 loadings_df <- as.data.frame(unclass(fact_out$loadings))
@@ -157,7 +157,7 @@ industry_factor <- loadings_df %>%
     mean_F2 = mean(Factor2, na.rm = TRUE))
 ```
 to compare what happens when we use 3 factors - 
-```{r}
+```{r, eval=FALSE}
 fact_out_2 <- factanal(sample_df[,-1], factors = 3, rotation = "varimax", scores = "regression")
 
 loadings_df2 <- as.data.frame(unclass(fact_out_2$loadings))
@@ -192,3 +192,42 @@ ggplot(industry_plot, aes(x = fl1, y = fl2, label = industry)) +
 
 ```
 
+## Question 4 
+```{r,eval=FALSE}
+uniq <- fact_out$uniquenesses
+fa_tbl <- tibble(StockID = names(uniq),
+                 uniqueness = as.numeric(uniq),
+                 Industry = substr(StockID, 1, 1))
+
+
+fa_tbl %>%
+  mutate(industry_name = recode(Industry,
+    B = "Mining",
+    C = "Construction",
+    D = "Manufacturing",
+    E = "Transport & Utilities",
+    F = "Wholesale Trade",
+    G = "Retail Trade",
+    H = "Finance/Insurance/RE",
+    I = "Services"
+  )) %>%
+  mutate(Industry = paste(Industry, "-", industry_name)) %>%
+  group_by(Industry) %>%
+  summarise(
+    `Mean uniqueness`   = mean(uniqueness, na.rm = TRUE),
+    `Median uniqueness` = median(uniqueness, na.rm = TRUE),
+    .groups = "drop"
+  ) %>% 
+  arrange(`Mean uniqueness`) %>%
+  kbl(
+    caption = "Industry-level Uniqueness (Mean and Median)",
+    digits = 3,
+    align = c("l","r","r")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%
+  column_spec(1, bold = TRUE)
+```
