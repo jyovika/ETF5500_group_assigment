@@ -133,11 +133,14 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
 ## Question 2
 **so we do this first**
 ```{r}
-fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax") 
+fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "regression")
 
 loadings_df <- as.data.frame(unclass(fact_out$loadings))
 loadings_df$stock <- rownames(loadings_df)
 loadings_df$industry <- substr(loadings_df$stock, 1, 1)
+
+factor_scores <- as.data.frame(fact_out$scores)
+factor_scores$Date <- sample_df$Date
 
 industry_factor <- loadings_df %>%
   group_by(industry) %>%
@@ -146,11 +149,22 @@ industry_factor <- loadings_df %>%
     mean_F2 = mean(Factor2, na.rm = TRUE)
   )
 
-library(broom)
+# Plot factor time series
+ggplot(factor_scores, aes(x = Factor1, y = Factor2, label = Date)) +
+  geom_text(size = 3) +
+  labs(title = "Factor scores", x = "Factor1", y = "Factor2") +
+  theme_minimal() +
+  theme(text = element_text(size = 12))
+
+ggplot(factor_scores, aes(x = Factor1, y = Factor2, color = as.numeric(Date))) +
+  geom_point(size = 2, alpha = 0.6) +
+  scale_color_viridis_c(option = "plasma") +
+  labs(title = "Factor scores", x = "Factor1", y = "Factor2", color = "Time") +
+  theme_minimal()
 ```
 **then we show with 3 factors**
 ```{r}
-fact_out_2 <- factanal(sample_df[,-1], factors = 3, rotation = "varimax") 
+fact_out <- factanal(sample_df[,-1], factors = 3, rotation = "varimax", scores = "regression")
 
 loadings_df2 <- as.data.frame(unclass(fact_out_2$loadings))
 loadings_df2$stock <- rownames(loadings_df2)
@@ -169,17 +183,14 @@ industry_factor2 <- loadings_df2 %>%
 
 
 ```{r}
-# 1) Build a tidy data frame for plotting
 df_plot <- loadings_df %>%
-  dplyr::transmute(
+  transmute(
     variable = stock,
     industry = industry,
     fl1 = Factor1,
     fl2 = Factor2
   )
 
-# 2) Plot arrows from origin to each loading pair
-library(ggplot2)
 ggplot(df_plot, aes(x = fl1, y = fl2, label = variable)) +
   geom_segment(aes(xend = fl1, yend = fl2, x = 0, y = 0),
                arrow = arrow(length = unit(0.15, "cm"))) +
@@ -190,13 +201,12 @@ ggplot(df_plot, aes(x = fl1, y = fl2, label = variable)) +
   theme_minimal()
 ```
 
-
+## plot for Q2
 
 ```{r}
  
-# Use your already computed industry_factor table:
 industry_plot <- industry_factor %>%
-  dplyr::rename(fl1 = mean_F1, fl2 = mean_F2)
+  rename(fl1 = mean_F1, fl2 = mean_F2)
 
 ggplot(industry_plot, aes(x = fl1, y = fl2, label = industry)) +
   geom_segment(aes(xend = fl1, yend = fl2, x = 0, y = 0),
