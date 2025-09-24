@@ -1,14 +1,17 @@
 ---
-title: "writeup_doc"
+title: "ETF5500 Group Assignment Submission"
 format: pdf
-editor: visual
+author: Girika, Jyovika Aswale, Richa Anghan, Sia Chawla, Siddhi Ajit Jadhav
 ---
+
+# Appendix - 
 ```{r, message=FALSE}
 library(tidyverse)
 library(zoo)
 library(broom)
+library(kableExtra)
+library(knitr)
 ```
-# Appendix - 
 
 ```{r}
 market_df <- read.csv(here::here("data/Market.csv"))
@@ -62,16 +65,15 @@ stocks_long <- sample_df %>%
            H = "Finance/Insurance/RE",
            I = "Services"))
 
-industry_summary <- stocks_long %>%
-  group_by(industry_name) %>%
-  summarise(
-    mean_return = mean(ret, na.rm = TRUE),
-    sd_return   = sd(ret, na.rm = TRUE),
-    .groups = "drop")
-
-ggplot(industry_summary, aes(x = reorder(industry_name, mean_return),y = mean_return, fill = industry_name)) +
+ggplot(stocks_long %>%
+         group_by(industry_name) %>%
+         summarise(mean_return = mean(ret, na.rm = TRUE),
+                   .groups = "drop"),
+       aes(x = reorder(industry_name, mean_return),
+           y = mean_return,
+           fill = industry_name)) +
   geom_col() +
-  coord_flip() +  
+  coord_flip() +
   scale_fill_manual(values = industry_cols) +
   labs(title = "Average Monthly Return by Industry",
        x = "Industry", y = "Mean Return") +
@@ -121,12 +123,10 @@ if (cor(pc1_ts, market_df$MarketReturn) < 0) {
   pca_out$rotation[,1] <- -pca_out$rotation[,1]
 }
 
-pc_scores <- as.data.frame(pca_out$x)   
-pc1_scores <- pc_scores$PC1
-
 pca_vs_market <- tibble(
-  Date = sample_df$Date,  
-  PC1 = pc1_ts) %>%
+  Date = sample_df$Date,
+  PC1 = pc1_ts
+) %>%
   left_join(market_df, by = "Date")
 
 cor(pca_vs_market$PC1, pca_vs_market$MarketReturn, use = "pairwise.complete.obs")
@@ -143,7 +143,7 @@ ggplot(pca_vs_market, aes(x = MarketReturn, y = PC1)) +
 ```
 
 ## Question 2
-```{reval=FALSE}
+```{r}
 fact_out <- factanal(sample_df[,-1], factors = 2, rotation = "varimax", scores = "regression")
 
 loadings_df <- as.data.frame(unclass(fact_out$loadings))
@@ -157,7 +157,7 @@ industry_factor <- loadings_df %>%
     mean_F2 = mean(Factor2, na.rm = TRUE))
 ```
 to compare what happens when we use 3 factors - 
-```{r, eval=FALSE}
+```{r}
 fact_out_2 <- factanal(sample_df[,-1], factors = 3, rotation = "varimax", scores = "regression")
 
 loadings_df2 <- as.data.frame(unclass(fact_out_2$loadings))
@@ -223,6 +223,46 @@ fa_tbl %>%
     caption = "Industry-level Uniqueness (Mean and Median)",
     digits = 3,
     align = c("l","r","r")
+  ) %>%
+  kable_styling(
+    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%
+  column_spec(1, bold = TRUE)
+```
+
+## Question 5
+```{r,eval=FALSE}
+cor_with_mkt <- map_dbl(sample_df[,-1], ~ cor(.x, market_df$MarketReturn))
+corr_tbl <- tibble(StockID = names(cor_with_mkt), cor_Market = cor_with_mkt)
+
+load_mat <- as_tibble(pca_out$rotation, rownames = "StockID")
+load_long <- load_mat |>
+  mutate(Industry = substr(StockID, 1, 1)) |>
+  select(StockID, Industry, PC1 = PC1, PC2 = PC2)
+
+load_long |>
+  group_by(Industry) |>
+  summarise(
+    mean_PC1 = mean(PC1),
+    mean_abs_PC1 = mean(abs(PC1)),
+    mean_PC2 = mean(PC2),
+    mean_abs_PC2 = mean(abs(PC2)),
+    .groups = "drop"
+) |> arrange(desc(mean_abs_PC1))
+
+pick_tbl <- load_long |>
+  select(StockID, Industry, PC1) |>
+  inner_join(corr_tbl, by = "StockID") |>
+  mutate(abs_PC1 = abs(PC1)) |>
+  arrange(desc(abs_PC1), desc(cor_Market))
+
+head(pick_tbl, 5) %>%
+  kbl(
+    caption = "Top 5 Stocks by Absolute PC1 Loading and Market Correlation",
+    digits = 3,
+    align = c("l","l","r","r","r")
   ) %>%
   kable_styling(
     bootstrap_options = c("striped", "hover", "condensed", "responsive"),
