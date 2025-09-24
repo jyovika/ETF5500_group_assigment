@@ -332,7 +332,29 @@ head(pick_tbl, 5) %>%
   row_spec(0, bold = TRUE, color = "white", background = "#3a405a") %>%
   column_spec(1, bold = TRUE)
 ```
+## Cluster Analysis
 
+```{r}
+
+
+
+industry_avg <- stocks_long %>%
+  group_by(Date, industry_name) %>%
+  summarise(AvgReturn = mean(ret, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = industry_name, values_from = AvgReturn)
+
+
+M <- t(scale(industry_avg[,-1]))  
+
+
+hc <- hclust(dist(M), method = "ward.D2")
+
+plot(hc, main = "Hierarchical clustering of industries (Ward.D2)",
+     xlab = "", sub = "", labels = rownames(M))
+
+
+
+```
 
 
 ## References
